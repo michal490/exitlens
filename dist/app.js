@@ -4,7 +4,9 @@ let snapshot, report, selected=0, saved=false, lastFetch=0;
 function render(){
  report=analyze(snapshot,Number($('position').value)); selected=Math.min(selected,Math.max(0,report.pools.length-1));
  $('results').hidden=false; $('mode').textContent=saved?'SAVED REAL EXAMPLE · HISTORICAL DATA':'LIVE REQUEST · POINT-IN-TIME SNAPSHOT';
- $('token-title').textContent=report.pools[0]?.name?.split(' / ')[0] || 'Token report';
+ const sameId=id=>snapshot.network==='solana'?id===`${snapshot.network}_${snapshot.token}`:id?.toLowerCase()===`${snapshot.network}_${snapshot.token}`.toLowerCase();
+ const tokenData=snapshot.response.included?.find(t=>t.type==='token'&&sameId(t.id));
+ $('token-title').textContent=tokenData?.attributes?.symbol || 'Token report';
  $('stamp').textContent=`${snapshot.network.toUpperCase()} · Fetched ${new Date(snapshot.fetchedAt).toISOString().replace('T',' ').slice(0,19)} UTC · ${snapshot.token}`;
  $('source').href=snapshot.endpoint;
  $('coverage').textContent=`${report.pools.length} pools returned · Page 1`;

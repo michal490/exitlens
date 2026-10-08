@@ -7,3 +7,4 @@ test('deduplicates and rejects unrelated tokens',()=>{const p=pool('a','100','2'
 test('quote-token matches reverse transaction direction and withhold base price change',()=>{const p=pool('a','100','2','solana_other');p.relationships.quote_token.data.id='solana_ABC';const r=analyze(snap([p]),1).pools[0];assert.equal(r.change,null);assert.equal(r.buys,3);});
 test('rejects invalid positions',()=>{for(const x of [0,-1,NaN,Infinity])assert.throws(()=>analyze(snap([]),x));});
 test('reserve concentration denominator is returned pools only',()=>{const r=analyze(snap([pool('a',75,1),pool('b',25,1)]),5);assert.equal(r.total,100);assert.equal(r.largestShare,75);});
+test('EVM contract identity ignores letter case',()=>{const p=pool('a',100,1,'eth_0xAbC');assert.equal(analyze({network:'eth',token:'0xabc',response:{data:[p]}},1).pools.length,1);});
