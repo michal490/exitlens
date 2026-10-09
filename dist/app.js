@@ -16,7 +16,7 @@ function render(){
 
  report=analyze(snapshot,Number($('position').value)); selected=Math.min(selected,Math.max(0,report.pools.length-1));
 
- $('results').hidden=view==='shortlist'; $('mode').textContent=saved?'SAVED REAL EXAMPLE · HISTORICAL DATA':'API DATA · POINT-IN-TIME SNAPSHOT';
+ $('results').hidden=view==='shortlist'; $('mode').textContent=saved?'SAVED REAL EXAMPLE · HISTORICAL DATA':`${snapshot.provider||'API DATA'} · POINT-IN-TIME SNAPSHOT`;
 
  const sameId=id=>snapshot.network==='solana'?id===`${snapshot.network}_${snapshot.token}`:id?.toLowerCase()===`${snapshot.network}_${snapshot.token}`.toLowerCase();
 
@@ -62,11 +62,11 @@ async function getResponse(endpoint){
 
  const r=await fetch(endpoint,{signal:AbortSignal.timeout(20000)});
 
- if(!r.ok)throw Error(r.status===429?'The shared API limit was reached. Wait a minute and retry.':`The data request failed (${r.status}). Try again later.`);
+ const payload=await r.json();if(!r.ok)throw Error(payload.error||`The data request failed (${r.status}).`);
 
- const response=await r.json();if(!Array.isArray(response.data))throw Error('The API returned an unexpected response.');
+ if(!Array.isArray(payload.response?.data))throw Error('The API returned an unexpected response.');
 
- const result={response,time:Date.now(),fetchedAt:new Date().toISOString()};cache.set(endpoint,result);return result;
+ const result={...payload,time:Date.now()};cache.set(endpoint,result);return result;
 
 }
 
@@ -82,11 +82,11 @@ async function lookup(network,token){
 
  setBusy(true);$('status').textContent='Reading pool data…';
 
- try{const endpoint=`https://api.geckoterminal.com/api/v2/networks/${network}/tokens/${encodeURIComponent(token)}/pools?include=base_token,quote_token,dex&page=1`;
+ try{const endpoint=`/api/pools?network=${network}&token=${encodeURIComponent(token)}`;
 
- const data=await getResponse(endpoint);snapshot={network,token,fetchedAt:data.fetchedAt,endpoint,response:data.response};saved=false;selected=0;
+ const data=await getResponse(endpoint);snapshot={network,token,fetchedAt:data.fetchedAt,endpoint:data.endpoint,provider:data.provider,response:data.response};saved=false;selected=0;
 
- $('network').value=network;$('token').value=token;$('status').textContent='Dated snapshot loaded. Identical requests may reuse data for up to 60 seconds.';setView(view==='shortlist'?'check':view);
+ $('network').value=network;$('token').value=token;$('status').textContent='Dated snapshot loaded. CoinGecko Pro API connected. Browser and server caching can make data up to about two minutes old.';setView(view==='shortlist'?'check':view);
 
  }catch(e){failure(e);}finally{setBusy(false);}
 
@@ -98,7 +98,7 @@ $('discovery').onsubmit=async e=>{e.preventDefault();if(busy)return;const query=
 
  setBusy(true);$('status').textContent='Finding matching tokens…';$('candidates').replaceChildren();
 
- try{const endpoint=`https://api.geckoterminal.com/api/v2/search/pools?query=${encodeURIComponent(query)}&network=${network}&include=base_token,quote_token,dex&page=1`;const {response}=await getResponse(endpoint),candidates=tokenCandidates(response,network,query);
+ try{const endpoint=`/api/search?query=${encodeURIComponent(query)}&network=${network}`;const {response}=await getResponse(endpoint),candidates=tokenCandidates(response,network,query);
 
  $('candidates').innerHTML=candidates.map((c,i)=>`<button type="button" class="candidate quiet" data-candidate="${i}"><strong>${esc(c.name)} · ${esc(c.symbol)}</strong><span>${esc(network.toUpperCase())} · ${esc(c.address)}</span><small>Use this contract</small></button>`).join('');
 
@@ -140,7 +140,7 @@ $('save-token').onclick=()=>{if(!snapshot||!report.pools.length){$('status').tex
 
 renderShortlist();
 
-$('export').onclick=()=>{const blob=new Blob([JSON.stringify({...snapshot,analysis:report,methodology:'Position / total pool reserves is not price impact. Page 1 only.'},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='poolcheck-evidence.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
+$('export').onclick=()=>{const blob=new Blob([JSON.stringify({...snapshot,analysis:report,methodology:'Position / total pool reserves is not price impact. Page 1 only.'},null,2)],{type:'application/json'});const url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download='exitlens-evidence.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);};
 
 $('example').click();
 
@@ -150,7 +150,7 @@ if(document.modelContext?.registerTool){
 
  const lifecycle=new AbortController();
 
- try{Promise.resolve(document.modelContext.registerTool({name:'read_poolcheck_report',description:'Read the currently displayed token snapshot and trade-size comparisons. Does not fetch new prices.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:true},execute(input){if(!input||Object.keys(input).length)throw Error('No inputs are supported.');return snapshot?{network:snapshot.network,token:snapshot.token,fetchedAt:snapshot.fetchedAt,historical:saved,report}: {status:'No report loaded'};}},{signal:lifecycle.signal})).catch(()=>{});}catch{}
+ try{Promise.resolve(document.modelContext.registerTool({name:'read_exitlens_report',description:'Read the currently displayed token snapshot and trade-size comparisons. Does not fetch new prices.',inputSchema:{type:'object',properties:{},additionalProperties:false},annotations:{readOnlyHint:true,untrustedContentHint:true},execute(input){if(!input||Object.keys(input).length)throw Error('No inputs are supported.');return snapshot?{network:snapshot.network,token:snapshot.token,fetchedAt:snapshot.fetchedAt,historical:saved,report}: {status:'No report loaded'};}},{signal:lifecycle.signal})).catch(()=>{});}catch{}
 
  window.addEventListener('pagehide',()=>lifecycle.abort(),{once:true});
 

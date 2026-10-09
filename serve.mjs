@@ -1,2 +1,7 @@
-import http from 'node:http';import fs from 'node:fs';import path from 'node:path';
-const root=path.resolve('dist');http.createServer((req,res)=>{const name=decodeURIComponent(new URL(req.url,'http://localhost').pathname);const file=path.resolve(root,'.'+(name==='/'?'/index.html':name));if(!file.startsWith(root+path.sep)){res.writeHead(403).end();return;}fs.readFile(file,(err,data)=>{if(err){res.writeHead(404).end('Not found');return;}res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.json':'application/json','.svg':'image/svg+xml'})[path.extname(file)]||'application/octet-stream');res.end(data);});}).listen(4178,'127.0.0.1',()=>console.log('PoolCheck: http://127.0.0.1:4178'));
+import http from 'node:http';
+import './build.mjs';
+const {default:worker}=await import('./dist/server/index.js');
+http.createServer(async(req,res)=>{
+ try{const response=await worker.fetch(new Request(new URL(req.url,'http://127.0.0.1:4178'),{method:req.method}),process.env,{});res.writeHead(response.status,Object.fromEntries(response.headers));res.end(Buffer.from(await response.arrayBuffer()));}
+ catch{res.writeHead(500).end('Request failed.');}
+}).listen(4178,'127.0.0.1',()=>console.log('ExitLens: http://127.0.0.1:4178'));

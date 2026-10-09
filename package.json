@@ -1,1 +1,11 @@
-{"name":"poolcheck","version":"1.0.0","private":true,"type":"module","scripts":{"test":"node --test tests/*.test.mjs","start":"node serve.mjs"}}
+{
+  "name": "exitlens",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.mjs",
+    "start": "node --env-file-if-exists=.env serve.mjs",
+    "build": "node build.mjs"
+  }
+}
