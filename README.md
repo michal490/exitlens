@@ -1,6 +1,6 @@
 # PoolCheck
 
-A read-only pool research tool built with CoinGecko data. Enter a token contract and hypothetical USD position, then compare that size with reported reserves in the returned pools.
+A read-only pre-trade token research tool built with CoinGecko data. Search by name or symbol, verify the exact contract, check token price and swap activity, compare pools for a hypothetical USD trade, and save up to eight tokens in a browser-local shortlist. No wallet connection is needed.
 
 ## Run
 
@@ -31,7 +31,7 @@ Pool `65GHmCbyRME3XwKjTqDB7pMJw2gvj2LZryfWKczoAqFR`: reserve $46,521.9605; 24h v
 
 ## Limits and next steps
 
-Manual requests only, with a browser cooldown and timeout. Keyless API access is intended for prototypes, not production, scheduled polling or high-frequency updates. The browser cooldown is not a production rate limiter. Next: separate server-side upgraded account key, shared caching and request limits, pagination, timestamped snapshots, and active-liquidity context where available. Exact execution quotes need an appropriate execution source; this version deliberately does not estimate them.
+Manual requests only, with a browser cooldown and timeout. Keyless API access is intended for prototypes, not production, scheduled polling or high-frequency updates. The browser cooldown is not a production rate limiter. Next: separate server-side upgraded account key, shared caching and request limits, pagination, a historical snapshot timeline, and active-liquidity context where available. Exact execution quotes need an appropriate execution source; this version deliberately does not estimate them.
 
 ## CoinGecko links
 
@@ -41,3 +41,11 @@ Manual requests only, with a browser cooldown and timeout. Keyless API access is
 - [Keyless API limits](https://docs.coingecko.com/docs/keyless-public-api)
 
 CoinGecko supplies the data. PoolCheck computes the ratios and explanations. CoinGecko branding belongs to its owner.
+
+## Everyday workflow
+
+- **Token check:** name/symbol search on Solana, Ethereum, Base or BNB Chain; select a full contract and explicitly request its pools. Search covers up to 20 matching pools and does not verify token authenticity. Price belongs to the selected pool.
+- **Compare pools:** select a pool to update the shared trade-size calculation. $100, $1,000 and $5,000 presets recalculate without another request.
+- **My shortlist:** up to eight token snapshots saved only in this browser. Open an old check or manually request current pools. Save again to replace that token's snapshot; there is no automatic refresh, cross-device sync or history timeline. Each row uses the largest returned pool and its own timestamp; rows are not simultaneous quotes.
+
+The browser caches identical responses for 60 seconds and spaces network requests by 10 seconds. This is convenience caching, not shared server-side traffic protection. Timeout/API failures preserve the previous labelled report. Export evidence includes the source response and current calculation.
