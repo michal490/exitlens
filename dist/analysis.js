@@ -13,6 +13,7 @@ export function analyze(snapshot, position) {
     const a=p.attributes || {}, reserve=numeric(a.reserve_in_usd), volume=numeric(a.volume_usd?.h24);
     const targetIsBase=identity(p.relationships.base_token?.data?.id) === target;
     return {id:p.id,address:a.address,name:a.name || 'Unnamed pool',dex:p.relationships.dex?.data?.id || 'Unknown DEX',reserve,volume,
+      price:numeric(targetIsBase ? a.base_token_price_usd : a.quote_token_price_usd),
       change:targetIsBase ? numeric(a.price_change_percentage?.h24) : null,
       buys:targetIsBase ? numeric(a.transactions?.h24?.buys) : numeric(a.transactions?.h24?.sells),
       sells:targetIsBase ? numeric(a.transactions?.h24?.sells) : numeric(a.transactions?.h24?.buys),
